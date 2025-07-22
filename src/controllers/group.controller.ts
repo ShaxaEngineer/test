@@ -27,7 +27,7 @@ export const createUsers = async (req: Request, res: Response) => {
    }
 };
 
-//create group
+
 export const createGroups = async (req: Request, res: Response) => {
    try {
       const { name, users } = req.body;
