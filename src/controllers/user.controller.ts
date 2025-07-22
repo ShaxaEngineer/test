@@ -1,0 +1,58 @@
+import { Request, Response } from 'express';
+import { publishToQueue } from '../rabbit/publisher';
+import { connectDb } from '../config/db';
+import { AppDataSource } from '../config/data-source';
+import { User } from '../entities/user.entity';
+const userRepo = AppDataSource.getRepository(User);
+
+export const createUsers = async (req: Request, res: Response) => {
+   try {
+      const { name, email } = req.body;
+
+      if (!name || !email) {
+         return res.status(400).json({ message: 'Name and email are required.' });
+      }
+      // Check if email already exists
+      const existingUser = await userRepo.findOne({ where: { email } });
+      if (existingUser) {
+         return res.status(409).json({ message: 'Email already exists.' });
+      }
+      const newUser = userRepo.create({ name, email });
+      const savedUser = await userRepo.save(newUser);
+      await publishToQueue('user_created', { userId: savedUser.id, email: savedUser.email });
+
+      res.status(201).json(savedUser);
+   } catch (error) {
+      console.error('❌ Error creating user:', error);
+      res.status(500).json({ message: 'Internal server error' });
+   }
+};
+
+export const getUsers = async (_req: Request, res: Response) => {
+   try {
+      const users = await userRepo.find()
+      return res.json(users)
+   } catch (error) {
+      console.error('DB error:', error);
+      res.status(500).send('Database error');
+   }
+};
+
+export const updateUsers = async (_req: Request, res: Response) => {
+   try {
+      return res.json("there is no fucking users bitch")
+   } catch (error) {
+      console.error('DB error:', error);
+      res.status(500).send('Database error');
+   }
+};
+
+
+export const deleteUsers = async (_req: Request, res: Response) => {
+   try {
+      return res.json("there is no fucking users bitch")
+   } catch (error) {
+      console.error('DB error:', error);
+      res.status(500).send('Database error');
+   }
+};
